@@ -5,6 +5,7 @@ import (
 	"os"
 	"os/signal"
 	"path/filepath"
+	"strings"
 	"syscall"
 	"time"
 )
@@ -57,6 +58,9 @@ func syncFiles(fromPath, toPath string) error {
 			fmt.Printf("%s is a dir, ignore\n", file.Name())
 			continue
 		} else {
+			if strings.HasPrefix(file.Name(), ".") {
+				continue
+			}
 			fInfo, err := os.Stat(fromFilePath)
 			if err != nil {
 				return err
