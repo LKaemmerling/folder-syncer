@@ -10,6 +10,8 @@ import (
 	"time"
 )
 
+var fileSizes = map[string]int64{}
+
 func main() {
 	start := os.Getenv("SYNC_FROM")
 	end := os.Getenv("SYNC_TO")
@@ -62,23 +64,34 @@ func syncFiles(fromPath, toPath string) error {
 				continue
 			}
 			fInfo, err := os.Stat(fromFilePath)
+			fSize := fInfo.Size()
 			if err != nil {
 				return err
 			}
 			if fInfo.ModTime().Before(time.Now().Add(-5 * time.Second)) {
-				fmt.Printf("%s is a file, copy,  because last modified is %s\n", file.Name(), fInfo.ModTime())
-				err = copyFile(fromFilePath, toFilePath)
-				if err != nil {
-					return err
+				if f, ok := fileSizes[fromFilePath]; ok {
+					if f == fSize {
+						fmt.Printf("%s is a file, copy, because last modified is %s\n", file.Name(), fInfo.ModTime())
+						err = copyFile(fromFilePath, toFilePath)
+						if err != nil {
+							return err
+						}
+						fmt.Printf("%s is a file, copy successfull, delete old\n", file.Name())
+						err = os.Remove(fromFilePath)
+						if err != nil {
+							return err
+						}
+						fmt.Printf("%s is a file, delete old sucessfull\n", file.Name())
+						delete(fileSizes, fromFilePath)
+					} else {
+						fmt.Printf("%s size does not equal: stored %d; from run %d\n", file.Name(), f, fSize)
+					}
+				} else {
+					fmt.Printf("%s is not known in file size metric, wait for next run\n", file.Name())
 				}
-				fmt.Printf("%s is a file, copy successfull, delete old\n", file.Name())
-				err = os.Remove(fromFilePath)
-				if err != nil {
-					return err
-				}
-				fmt.Printf("%s is a file, delete old sucessfull\n", file.Name())
 			} else {
 				fmt.Printf("%s is a file, ignore, because last modified is to recent %s\n", file.Name(), fInfo.ModTime())
+				fileSizes[fromFilePath] = fSize
 
 			}
 
