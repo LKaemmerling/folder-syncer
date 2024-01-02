@@ -19,12 +19,12 @@ type cfg struct {
 func main() {
 	start := os.Getenv("SYNC_FROM")
 	end := os.Getenv("SYNC_TO")
-	prefix_new_file_name_with := os.Getenv("PREFIX_WITH")
+	prefixNewFileNameWith := os.Getenv("PREFIX_WITH")
 
 	if start == "" || end == "" {
 		PrintlnAndExit("ENV SYNC_FROM and SYNC_TO needs to be specified", 1)
 	}
-	cfg := &cfg{fileSizes: map[string]int64{}, fileNamePrefix: prefix_new_file_name_with}
+	cfg := &cfg{fileSizes: map[string]int64{}, fileNamePrefix: prefixNewFileNameWith}
 	c := make(chan os.Signal)
 	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
 
@@ -78,7 +78,7 @@ func syncFiles(fromPath, toPath string, cfg *cfg) error {
 				if f, ok := cfg.fileSizes[fromFilePath]; ok {
 					if f == fSize {
 						fmt.Printf("%s is a file, copy, because last modified is %s\n", file.Name(), fInfo.ModTime())
-						nF := fmt.Sprintf("%s_%s", cfg.fileNamePrefix, file.Name())
+						nF := fmt.Sprintf("%s_%s", cfg.fileNamePrefix, strings.ToLower(file.Name()))
 						toFilePath := filepath.Join(toPath, nF)
 
 						err = copyFile(fromFilePath, toFilePath)
