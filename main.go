@@ -12,16 +12,19 @@ import (
 
 type cfg struct {
 	fileSizes map[string]int64
+
+	fileNamePrefix string
 }
 
 func main() {
 	start := os.Getenv("SYNC_FROM")
 	end := os.Getenv("SYNC_TO")
+	prefix_new_file_name_with := os.Getenv("PREFIX_WITH")
 
 	if start == "" || end == "" {
 		PrintlnAndExit("ENV SYNC_FROM and SYNC_TO needs to be specified", 1)
 	}
-	cfg := &cfg{fileSizes: map[string]int64{}}
+	cfg := &cfg{fileSizes: map[string]int64{}, fileNamePrefix: prefix_new_file_name_with}
 	c := make(chan os.Signal)
 	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
 
@@ -58,7 +61,7 @@ func syncFiles(fromPath, toPath string, cfg *cfg) error {
 
 	for _, file := range files {
 		fromFilePath := filepath.Join(fromPath, file.Name())
-		toFilePath := filepath.Join(toPath, file.Name())
+
 		if file.IsDir() {
 			fmt.Printf("%s is a dir, ignore\n", file.Name())
 			continue
@@ -75,6 +78,9 @@ func syncFiles(fromPath, toPath string, cfg *cfg) error {
 				if f, ok := cfg.fileSizes[fromFilePath]; ok {
 					if f == fSize {
 						fmt.Printf("%s is a file, copy, because last modified is %s\n", file.Name(), fInfo.ModTime())
+						nF := fmt.Sprintf("%s_%s", cfg.fileNamePrefix, file.Name())
+						toFilePath := filepath.Join(toPath, nF)
+
 						err = copyFile(fromFilePath, toFilePath)
 						if err != nil {
 							return err
