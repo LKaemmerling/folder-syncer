@@ -90,14 +90,12 @@ func syncFiles(fromPath, toPath string, cfg *cfg) error {
 						fmt.Printf("%s size does not equal: stored %d; from run %d\n", file.Name(), f, fSize)
 					}
 				} else {
+					cfg.fileSizes[fromFilePath] = fSize
 					fmt.Printf("%s is not known in file size metric, wait for next run\n", file.Name())
 				}
 			} else {
 				fmt.Printf("%s is a file, ignore, because last modified is to recent %s\n", file.Name(), fInfo.ModTime())
-				cfg.fileSizes[fromFilePath] = fSize
-
 			}
-
 		}
 	}
 
