@@ -10,8 +10,6 @@ import (
 	"time"
 )
 
-var fileSizes = map[string]int64{}
-
 func main() {
 	start := os.Getenv("SYNC_FROM")
 	end := os.Getenv("SYNC_TO")
@@ -19,7 +17,7 @@ func main() {
 	if start == "" || end == "" {
 		PrintlnAndExit("ENV SYNC_FROM and SYNC_TO needs to be specified", 1)
 	}
-
+	var fileSizes = map[string]int64{}
 	c := make(chan os.Signal)
 	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
 
@@ -30,7 +28,8 @@ func main() {
 			select {
 			case t := <-ticker.C:
 				fmt.Printf("Sycing folders at %s\n", t.String())
-				err := syncFiles(start, end)
+				err := syncFiles(start, end, fileSizes)
+				fmt.Printf("File Sizes map:%v", fileSizes)
 				if err != nil {
 					PrintlnAndExit(err.Error(), 1)
 				}
@@ -47,7 +46,7 @@ func PrintlnAndExit(msg string, exitCode int) {
 	os.Exit(exitCode)
 }
 
-func syncFiles(fromPath, toPath string) error {
+func syncFiles(fromPath, toPath string, fileSizes map[string]int64) error {
 	files, err := os.ReadDir(fromPath)
 	if err != nil {
 		return err
