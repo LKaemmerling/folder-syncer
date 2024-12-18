@@ -50,6 +50,7 @@ func main() {
 			}
 		}
 		if printTestPage == "yes" {
+			fmt.Printf("Should print test page\n")
 			_, err = cupsClient.PrintTestPage(printToPrinter)
 			if err != nil {
 				PrintlnAndExit(fmt.Sprintf("Getting printers from cups failed: %v", err), 1)
