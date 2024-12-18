@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/phin1x/go-ipp"
 	"os"
 	"os/signal"
 	"path/filepath"
@@ -14,17 +15,29 @@ type cfg struct {
 	fileSizes map[string]int64
 
 	fileNamePrefix string
+
+	printLocally bool
 }
 
 func main() {
 	start := os.Getenv("SYNC_FROM")
 	end := os.Getenv("SYNC_TO")
 	prefixNewFileNameWith := os.Getenv("PREFIX_WITH")
+	printLocallyEnv := os.Getenv("PRINT_LOCALLY")
 
 	if start == "" || end == "" {
 		PrintlnAndExit("ENV SYNC_FROM and SYNC_TO needs to be specified", 1)
 	}
-	cfg := &cfg{fileSizes: map[string]int64{}, fileNamePrefix: prefixNewFileNameWith}
+	printLocally := false
+	var cupsClient *ipp.CUPSClient
+	if printLocallyEnv == "yes" {
+		printLocally = true
+		cupsClient = ipp.NewCUPSClient("localhost", 631, "", "", false)
+		if err := cupsClient.TestConnection(); err != nil {
+			PrintlnAndExit(fmt.Sprintf("Testing the connection to cups failed: %v", err), 1)
+		}
+	}
+	cf := &cfg{fileSizes: map[string]int64{}, fileNamePrefix: prefixNewFileNameWith, printLocally: printLocally}
 	c := make(chan os.Signal)
 	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
 
@@ -35,11 +48,12 @@ func main() {
 			select {
 			case t := <-ticker.C:
 				fmt.Printf("Sycing folders at %s\n", t.String())
-				err := syncFiles(start, end, cfg)
-				fmt.Printf("File Sizes map:%v", cfg.fileSizes)
+				err := syncFiles(start, end, cf)
+				fmt.Printf("File Sizes map:%v", cf.fileSizes)
 				if err != nil {
 					PrintlnAndExit(err.Error(), 1)
 				}
+
 			}
 		}
 	}()
