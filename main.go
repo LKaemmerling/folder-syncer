@@ -51,9 +51,15 @@ func main() {
 		}
 		if printTestPage == "yes" {
 			fmt.Printf("Should print test page\n")
-			_, err = cupsClient.PrintTestPage(printToPrinter)
+			r := strings.NewReader("a test print")
+			_, err = cupsClient.PrintJob(ipp.Document{
+				Document: r,
+				Size:     r.Len(),
+				Name:     "test.txt",
+				MimeType: "text/plain",
+			}, printToPrinter, map[string]interface{}{})
 			if err != nil {
-				PrintlnAndExit(fmt.Sprintf("Getting printers from cups failed: %v", err), 1)
+				PrintlnAndExit(fmt.Sprintf("printing test page on cups failed: %v", err), 1)
 			}
 		}
 	}
