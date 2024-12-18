@@ -36,6 +36,14 @@ func main() {
 		if err := cupsClient.TestConnection(); err != nil {
 			PrintlnAndExit(fmt.Sprintf("Testing the connection to cups failed: %v", err), 1)
 		}
+		fmt.Println("Connected to cups")
+		printers, err := cupsClient.GetPrinters([]string{})
+		if err != nil {
+			PrintlnAndExit(fmt.Sprintf("Getting printers from cups failed: %v", err), 1)
+		}
+		for printer, _ := range printers {
+			fmt.Printf("Found printer: %s\n", printer)
+		}
 	}
 	cf := &cfg{fileSizes: map[string]int64{}, fileNamePrefix: prefixNewFileNameWith, printLocally: printLocally}
 	c := make(chan os.Signal)
