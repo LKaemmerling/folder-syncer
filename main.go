@@ -17,6 +17,9 @@ type cfg struct {
 	fileNamePrefix string
 
 	printLocally bool
+
+	printToPrinter string
+	cupsClient     *ipp.CUPSClient
 }
 
 func main() {
@@ -63,7 +66,13 @@ func main() {
 			}
 		}
 	}
-	cf := &cfg{fileSizes: map[string]int64{}, fileNamePrefix: prefixNewFileNameWith, printLocally: printLocally}
+	cf := &cfg{
+		fileSizes:      map[string]int64{},
+		fileNamePrefix: prefixNewFileNameWith,
+		printLocally:   printLocally,
+		printToPrinter: printToPrinter,
+		cupsClient:     cupsClient,
+	}
 	c := make(chan os.Signal)
 	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
 
@@ -129,6 +138,13 @@ func syncFiles(fromPath, toPath string, cfg *cfg) error {
 						err = os.Remove(fromFilePath)
 						if err != nil {
 							return err
+						}
+						if cfg.printLocally {
+							fmt.Printf("%s is a file, should be printed locally\n", file.Name())
+							_, err = cfg.cupsClient.PrintFile(fromFilePath, cfg.printToPrinter, map[string]interface{}{})
+							if err != nil {
+								fmt.Printf("%s is a file, priting failed, however file will be deleted: %v \n", file.Name(), err)
+							}
 						}
 						fmt.Printf("%s is a file, delete old sucessfull\n", file.Name())
 						delete(cfg.fileSizes, fromFilePath)
