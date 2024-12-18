@@ -24,6 +24,8 @@ func main() {
 	end := os.Getenv("SYNC_TO")
 	prefixNewFileNameWith := os.Getenv("PREFIX_WITH")
 	printLocallyEnv := os.Getenv("PRINT_LOCALLY")
+	printToPrinter := os.Getenv("PRINT_TO_PRINTER")
+	printTestPage := os.Getenv("PRINT_TEST_PAGE")
 
 	if start == "" || end == "" {
 		PrintlnAndExit("ENV SYNC_FROM and SYNC_TO needs to be specified", 1)
@@ -43,6 +45,15 @@ func main() {
 		}
 		for printer, _ := range printers {
 			fmt.Printf("Found printer: %s\n", printer)
+			if printer == printToPrinter {
+				fmt.Printf("\t%s is configured as printer\n", printer)
+			}
+		}
+		if printTestPage == "yes" {
+			_, err = cupsClient.PrintTestPage(printToPrinter)
+			if err != nil {
+				PrintlnAndExit(fmt.Sprintf("Getting printers from cups failed: %v", err), 1)
+			}
 		}
 	}
 	cf := &cfg{fileSizes: map[string]int64{}, fileNamePrefix: prefixNewFileNameWith, printLocally: printLocally}
