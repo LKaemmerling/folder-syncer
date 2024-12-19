@@ -134,17 +134,17 @@ func syncFiles(fromPath, toPath string, cfg *cfg) error {
 						if err != nil {
 							return err
 						}
-						fmt.Printf("%s is a file, copy successfull, delete old\n", file.Name())
-						err = os.Remove(fromFilePath)
-						if err != nil {
-							return err
-						}
 						if cfg.printLocally {
 							fmt.Printf("%s is a file, should be printed locally\n", file.Name())
 							_, err = cfg.cupsClient.PrintFile(fromFilePath, cfg.printToPrinter, map[string]interface{}{})
 							if err != nil {
 								fmt.Printf("%s is a file, priting failed, however file will be deleted: %v \n", file.Name(), err)
 							}
+						}
+						fmt.Printf("%s is a file, copy successfull, delete old\n", file.Name())
+						err = os.Remove(fromFilePath)
+						if err != nil {
+							return err
 						}
 						fmt.Printf("%s is a file, delete old sucessfull\n", file.Name())
 						delete(cfg.fileSizes, fromFilePath)
